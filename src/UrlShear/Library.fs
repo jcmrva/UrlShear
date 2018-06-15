@@ -14,23 +14,52 @@ module Create =
             | Names s -> s.Contains(uri.Host)
             //| IPs ips -> ips.Contains(uri.Host)
             | _ -> false
-        in
-        (hostConfigDflt::hosts)
+
+        (hostConfigDflt :: hosts)
         |> List.rev
         |> List.filter uriMatch 
         |> List.head
 
+    let origModified (cfg:HostConfig) (orig:Uri) =
+        let query =
+            match cfg.filterQueryParams with
+            | IncludeAll -> orig.Query
+            | ExcludeAll -> String.Empty
+            | Include ip -> "TODO List.filter"
+            | Exclude ep -> "TODO"
+        
+        let bld = UriBuilder(orig)
+        bld.Host <- orig.Host
+        bld.Query <- query
+        if cfg.forceHttps then 
+            bld.Scheme <- "Https"
+        if cfg.removeFragment 
+            && not <| String.IsNullOrWhiteSpace(orig.Fragment) then 
+            bld.Fragment <- String.Empty
+        
+        bld.ToString()
 
-    let short (orig:Uri) (s:string) (cfg:HostConfig) =
-        orig.Scheme
-        + s
-        + orig.Port.ToString()
-        + orig.PathAndQuery
-        + if not cfg.removeFragment then orig.Fragment else ""
+    let removePrefixChar (s:string) pfx = 
+        if s.Substring(0, 1) = pfx then
+            s.Substring(1, s.Length - 1)
+        else s
 
-    let isValid (uri:Uri) (cfg:HostConfig) =
+    let queryToList (q:string) =
+        // assumes 1 element: &param& ; 2 element: &param=value&
+        let toTuple (p:string[]) =
+            (p.[0], if p.Length > 1 then p.[1] else "")
+
+        match q with
+        | "" -> []
+        | _ -> 
+            (removePrefixChar q "?").Split([|'&'|], StringSplitOptions.RemoveEmptyEntries)
+            |> Array.map (fun e -> e.Split('=') |> toTuple)
+            |> Array.toList
+
+    let isValidName (cfg:HostConfig) (uri:Uri) =
         not uri.IsLoopback 
         && uri.IsAbsoluteUri
+        && Uri.CheckHostName(uri.Host) = UriHostNameType.Dns
         && match cfg.scheme with
             | Both -> uri.Scheme = "Https" || uri.Scheme = "Http"
             | s -> uri.Scheme = s.ToString()

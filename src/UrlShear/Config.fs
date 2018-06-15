@@ -5,9 +5,11 @@ open System.Net
 [<AutoOpen>]
 module Config =
 
-    type Host = | Any | Name of string | Names of string list | IPs of IPAddress list
+    type InputHost = | Any | Names of string list | IPs of IPAddress list
 
-    type QueryParams = | All | Params of string list
+    type ShortHost = | Input | InputWithPath of string | Name of string
+
+    type QueryParams = | IncludeAll | ExcludeAll | Include of string list | Exclude of string list
 
     type Scheme = | Https | Http | Both
 
@@ -16,14 +18,15 @@ module Config =
     type Style = | Alpha of int * AlphaCase | AlphaNumeric of int * AlphaCase | Pattern of string
 
     type HostConfig = {
-        original : Host
-        short : Host
-        removeQueryParams : QueryParams option
+        original : InputHost
+        short : ShortHost
+        filterQueryParams : QueryParams
         scheme : Scheme
         removeFragment : bool
         expireDays : int
         style : Style
         defaultRedirect : string // if key lookup fails
+        forceHttps : bool
     }
 
     type ErrorAction = | Excp | HostStyleDefault
@@ -34,15 +37,16 @@ module Config =
     }
 
     let hostConfigDflt = {
-            original = Any
-            short = Any
-            removeQueryParams = None
-            scheme = Both
-            removeFragment = false
-            expireDays = 365
-            style = AlphaNumeric (15, MixedCase)
-            defaultRedirect = "" // if key lookup fails
-        }
+        original = Any
+        short = Input
+        filterQueryParams = IncludeAll
+        scheme = Both
+        removeFragment = false
+        expireDays = 365
+        style = AlphaNumeric (15, MixedCase)
+        defaultRedirect = ""
+        forceHttps = false
+    }
 
     let processOptionsDefault = {
         hostConfig = Some [ hostConfigDflt ]
@@ -51,4 +55,5 @@ module Config =
 
     type ReqOpt = {
         style : Style option
+        escapedReturn : bool
     }
