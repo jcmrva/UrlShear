@@ -5,13 +5,13 @@ open System.Net
 [<AutoOpen>]
 module Config =
 
-    type Host = | Any | Names of string list | IP of IPAddress
+    type Host = | Any | Name of string | Names of string list | IPs of IPAddress list
 
     type QueryParams = | All | Params of string list
 
     type Scheme = | Https | Http | Both
 
-    type AlphaCase = | Upper | Lower | Mixed
+    type AlphaCase = | Upper | Lower | MixedCase
 
     type Style = | Alpha of int * AlphaCase | AlphaNumeric of int * AlphaCase | Pattern of string
 
@@ -30,10 +30,23 @@ module Config =
 
     type ProcessOptions = {
         hostConfig : HostConfig list option
+        onError : ErrorAction
     }
 
+    let hostConfigDflt = {
+            original = Any
+            short = Any
+            removeQueryParams = None
+            scheme = Both
+            removeFragment = false
+            expireDays = 365
+            style = AlphaNumeric (15, MixedCase)
+            defaultRedirect = "" // if key lookup fails
+        }
+
     let processOptionsDefault = {
-        hostConfig = None
+        hostConfig = Some [ hostConfigDflt ]
+        onError = HostStyleDefault
     }
 
     type ReqOpt = {
