@@ -15,7 +15,7 @@ module Config =
 
     type AlphaCase = | Upper | Lower | MixedCase
 
-    type Style = | Alpha of int * AlphaCase | AlphaNumeric of int * AlphaCase | Pattern of string
+    type Style = | Alpha of int * AlphaCase | AlphaNumeric of int * AlphaCase | Pattern of string | InputText of string
 
     type HostConfig = {
         original : InputHost
