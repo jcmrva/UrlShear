@@ -20,9 +20,9 @@ module Create =
         |> List.filter uriMatch 
         |> List.head
 
-    let origModified (cfg:HostConfig) (orig:Uri) =
+    let origModified cfgParams forceHttps removeFragment (orig:Uri) =
         let query =
-            match cfg.filterQueryParams with
+            match cfgParams with
             | IncludeAll -> orig.Query
             | ExcludeAll -> String.Empty
             | Include ip -> "TODO List.filter"
@@ -31,9 +31,9 @@ module Create =
         let bld = UriBuilder(orig)
         bld.Host <- orig.Host
         bld.Query <- query
-        if cfg.forceHttps then 
+        if forceHttps then 
             bld.Scheme <- "Https"
-        if cfg.removeFragment 
+        if removeFragment 
             && not <| String.IsNullOrWhiteSpace(orig.Fragment) then 
             bld.Fragment <- String.Empty
         
@@ -56,10 +56,15 @@ module Create =
             |> Array.map (fun e -> e.Split('=') |> toTuple)
             |> Array.toList
 
-    let isValidName (cfg:HostConfig) (uri:Uri) =
+    let isValidName scheme (uri:Uri) =
         not uri.IsLoopback 
         && uri.IsAbsoluteUri
         && Uri.CheckHostName(uri.Host) = UriHostNameType.Dns
-        && match cfg.scheme with
+        && match scheme with
             | Both -> uri.Scheme = "Https" || uri.Scheme = "Http"
             | s -> uri.Scheme = s.ToString()
+
+type Builder(cfg:HostConfig) =
+    member __.Cfg = cfg
+
+    new() = Builder(hostConfigDflt)
