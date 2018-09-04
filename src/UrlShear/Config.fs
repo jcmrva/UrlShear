@@ -4,18 +4,32 @@ open System.Net
 
 [<AutoOpen>]
 module Config =
+    
+    type InputHost = 
+        | Any 
+        | Names of string list 
+        | IPs of IPAddress list
 
-    type InputHost = | Any | Names of string list | IPs of IPAddress list
+    type ShortHost = 
+        | Input 
+        | InputWithPath of string 
+        | Name of string
 
-    type ShortHost = | Input | InputWithPath of string | Name of string
-
-    type QueryParams = | IncludeAll | ExcludeAll | Include of string list | Exclude of string list
+    type QueryParams = 
+        | IncludeAll 
+        | ExcludeAll 
+        | Include of string list 
+        | Exclude of string list
 
     type Scheme = | Https | Http | Both
 
-    type AlphaCase = | Upper | Lower | MixedCase
+    type AlphaCase = | Upper | Lower | Mixed
 
-    type Style = | Alpha of int * AlphaCase | AlphaNumeric of int * AlphaCase | Pattern of string | InputText of string
+    type Style = 
+        | Alpha of int * AlphaCase 
+        | AlphaNumeric of int * AlphaCase 
+        | Pattern of string 
+        | InputText of string
 
     type HostConfig = {
         original : InputHost
@@ -25,7 +39,7 @@ module Config =
         removeFragment : bool
         expireDays : int
         style : Style
-        defaultRedirect : string // if key lookup fails
+        defaultRedirect : string option // if key lookup fails
         forceHttps : bool
     }
 
@@ -43,8 +57,8 @@ module Config =
         scheme = Both
         removeFragment = false
         expireDays = 365
-        style = AlphaNumeric (15, MixedCase)
-        defaultRedirect = ""
+        style = AlphaNumeric (15, Mixed)
+        defaultRedirect = None
         forceHttps = false
     }
 

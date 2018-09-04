@@ -16,8 +16,8 @@ module Create =
             | _ -> false
 
         (hostConfigDflt :: hosts)
+        |> List.filter uriMatch
         |> List.rev
-        |> List.filter uriMatch 
         |> List.head
 
     let origModified cfgParams forceHttps removeFragment (orig:Uri) =
